@@ -50,6 +50,8 @@ export default class Trimmer extends React.Component {
       trackBackgroundHeight: trimSizer - 40
     }
 
+    // console.log('trimScaler: ', this.trimScaler)
+
     let trackScale = props.initialZoomValue || INITIAL_ZOOM
     if (props.scaleInOnInit) {
       const {
@@ -342,6 +344,22 @@ export default class Trimmer extends React.Component {
     onScrubberPressIn && onScrubberPressIn()
   }
 
+  formatTimeCounter = (ms = 0) => {
+    if (!ms || Math.floor(ms) === 0) return '00:00';
+    // 1- Convert to seconds:
+    let seconds = ms / 1000;
+    // 2- Extract hours:
+    const hours = parseInt(seconds / 3600); // 3,600 seconds in 1 hour
+    seconds = seconds % 3600; // seconds remaining after extracting hours
+    // 3- Extract minutes:
+    const minutes = parseInt(seconds / 60); // 60 seconds in 1 minute
+    // 4- Keep only seconds not extracted to minutes:
+    seconds = seconds % 60;
+    return (hours ? this.bomb(Math.round(hours)) + ":" : '') + this.bomb(Math.round(minutes)) + ":" + this.bomb(Math.round(seconds));
+  }
+
+  bomb = s => ((s + '').length > 1 ? s : ('0' + s));
+
   render() {
     const {
       maxTrimDuration,
@@ -357,6 +375,11 @@ export default class Trimmer extends React.Component {
       scrubberColor = SCRUBBER_COLOR,
       centerOnLayout = CENTER_ON_LAYOUT,
       showScrollIndicator = SHOW_SCROLL_INDICATOR,
+      clipsComponent,
+      handlerTextStyle,
+      scrubberTextStyle,
+      hideHandlerText,
+      hideScrubberText
     } = this.props;
 
     // if(maxTrimDuration < trimmerRightHandlePosition - trimmerLeftHandlePosition) {
@@ -407,8 +430,8 @@ export default class Trimmer extends React.Component {
     const onLayoutHandler = centerOnLayout
       ? {
         onLayout: () => {
-          const centerOffset = actualTrimmerOffset + (actualTrimmerWidth / 2) - (screenWidth / 2);
-          this.scrollView.scrollTo({ x: centerOffset, y: 0, animated: false });
+          // const centerOffset = actualTrimmerOffset + (actualTrimmerWidth / 2) - (screenWidth / 2);
+          // this.scrollView.scrollTo({ x: centerOffset, y: 0, animated: false });
         }
       }
       : null
@@ -447,6 +470,11 @@ export default class Trimmer extends React.Component {
                 ))
               }
             </View>
+            {clipsComponent ?
+              <View
+                style={{ width: '100%', height: '100%', position: 'absolute' }}>
+                {clipsComponent}
+              </View> : null}
           </View>
           {
             typeof scrubberPosition === 'number'
@@ -458,9 +486,15 @@ export default class Trimmer extends React.Component {
                   hitSlop={{ top: 8, bottom: 8, right: 8, left: 8 }}
                   {...this.scrubHandlePanResponder.panHandlers}
                 >
-                  <View
-                    style={[styles.scrubberHead, { backgroundColor: scrubberColor }]}
-                  />
+                  <View style={[styles.scrubberHead, { backgroundColor: scrubberColor }]}>
+                    {hideScrubberText ?
+                      null
+                      : <Text
+                        allowFontScaling={false}
+                        style={[{ color: 'white', position: 'absolute', width: 70, left: 17 }, scrubberTextStyle]}>
+                        {this.formatTimeCounter(scrubPosition)}
+                      </Text>}
+                  </View>
                   <View style={[styles.scrubberTail, { backgroundColor: scrubberColor, height: this.trimScaler.scribberTailHeight }]} />
                 </View>
               )
@@ -472,6 +506,16 @@ export default class Trimmer extends React.Component {
             { backgroundColor: tintColor, left: actualTrimmerOffset - this.trimScaler.handleWidth, height: this.trimScaler.handleHeight, width: this.trimScaler.handleWidth }
           ]}>
             <Arrow.Left />
+            <View
+              style={{ position: 'absolute', left: this.trimScaler.handleWidth + 15, height: '100%', justifyContent: 'center' }}>
+              {hideHandlerText ?
+                null
+                : <Text
+                  allowFontScaling={false}
+                  style={[{ width: 70 }, handlerTextStyle]}>
+                  {this.formatTimeCounter(trimmerLeftHandlePosition)}
+                </Text>}
+            </View>
           </View>
           <View style={[
             styles.trimmer,
@@ -486,6 +530,16 @@ export default class Trimmer extends React.Component {
             { backgroundColor: tintColor, left: actualTrimmerOffset + actualTrimmerWidth, height: this.trimScaler.handleHeight, width: this.trimScaler.handleWidth }
           ]} >
             <Arrow.Right />
+            <View
+              style={{ position: 'absolute', right: this.trimScaler.handleWidth + 15, height: '100%', justifyContent: 'center' }}>
+              {hideHandlerText ?
+                null
+                : <Text
+                  allowFontScaling={false}
+                  style={[{ width: 70, textAlign: 'right' }, handlerTextStyle]}>
+                  {this.formatTimeCounter(trimmerRightHandlePosition)}
+                </Text>}
+            </View>
           </View>
         </ScrollView>
       </View >
