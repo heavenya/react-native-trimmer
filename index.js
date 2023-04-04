@@ -116,7 +116,7 @@ export default class Trimmer extends React.Component {
       const trackWidth = (screenWidth) * trackScale
       const calculatedScrubberPosition = (scrubberPosition / totalDuration) * trackWidth;
 
-      const newScrubberPosition = ((calculatedScrubberPosition + gestureState.dx) / trackWidth) * totalDuration
+      const newScrubberPosition = ((calculatedScrubberPosition + gestureState.dx) / trackWidth) * totalDuration;
 
       const lowerBound = Math.max(0, trimmerLeftHandlePosition)
       const upperBound = trimmerRightHandlePosition
@@ -402,7 +402,8 @@ export default class Trimmer extends React.Component {
       internalScrubbingPosition,
       trackScale,
       trimmingLeftHandleValue,
-      trimmingRightHandleValue
+      trimmingRightHandleValue,
+      rightTextWidth
     } = this.state;
 
     const trackWidth = screenWidth * trackScale
@@ -453,8 +454,7 @@ export default class Trimmer extends React.Component {
           ]}
           horizontal
           showsHorizontalScrollIndicator={showScrollIndicator}
-          {...{ ...this.trackPanResponder.panHandlers, ...onLayoutHandler }}
-        >
+          {...{ ...this.trackPanResponder.panHandlers, ...onLayoutHandler }}>
           <View style={trackBackgroundStyles}>
             <View style={styles.markersContainer}>
               {
@@ -484,14 +484,13 @@ export default class Trimmer extends React.Component {
                   { left: actualScrubPosition },
                 ]}
                   hitSlop={{ top: 8, bottom: 8, right: 8, left: 8 }}
-                  {...this.scrubHandlePanResponder.panHandlers}
-                >
+                  {...this.scrubHandlePanResponder.panHandlers}>
                   <View style={[styles.scrubberHead, { backgroundColor: scrubberColor }]}>
                     {hideScrubberText ?
                       null
                       : <Text
                         allowFontScaling={false}
-                        style={[{ color: 'white', position: 'absolute', width: 70, left: 17 }, scrubberTextStyle]}>
+                        style={[{ color: 'white', position: 'absolute', width: 70, left: 17, fontSize: 12 }, scrubberTextStyle]}>
                         {this.formatTimeCounter(scrubPosition)}
                       </Text>}
                   </View>
@@ -506,17 +505,19 @@ export default class Trimmer extends React.Component {
             { backgroundColor: tintColor, left: actualTrimmerOffset - this.trimScaler.handleWidth, height: this.trimScaler.handleHeight, width: this.trimScaler.handleWidth }
           ]}>
             <Arrow.Left />
-            <View
-              style={{ position: 'absolute', left: this.trimScaler.handleWidth + 15, height: '100%', justifyContent: 'center' }}>
-              {hideHandlerText ?
-                null
-                : <Text
-                  allowFontScaling={false}
-                  style={[{ width: 70 }, handlerTextStyle]}>
-                  {this.formatTimeCounter(trimmerLeftHandlePosition)}
-                </Text>}
-            </View>
           </View>
+          {hideHandlerText ? null :
+            <Text
+              allowFontScaling={false}
+              style={[{
+                position: 'absolute',
+                left: actualTrimmerOffset + this.trimScaler.handleWidth - 6,
+                zIndex: 1,
+                alignSelf: 'center'
+              }, handlerTextStyle]}>
+              {this.formatTimeCounter(trimmerLeftHandlePosition)}
+            </Text>}
+
           <View style={[
             styles.trimmer,
             { width: actualTrimmerWidth, left: actualTrimmerOffset },
@@ -527,20 +528,25 @@ export default class Trimmer extends React.Component {
           <View {...this.rightHandlePanResponder.panHandlers} style={[
             styles.handle,
             styles.rightHandle,
-            { backgroundColor: tintColor, left: actualTrimmerOffset + actualTrimmerWidth, height: this.trimScaler.handleHeight, width: this.trimScaler.handleWidth }
-          ]} >
+            { backgroundColor: tintColor, left: actualTrimmerOffset + actualTrimmerWidth, height: this.trimScaler.handleHeight, width: this.trimScaler.handleWidth, zIndex: 3 }
+          ]}>
             <Arrow.Right />
-            <View
-              style={{ position: 'absolute', right: this.trimScaler.handleWidth + 15, height: '100%', justifyContent: 'center' }}>
-              {hideHandlerText ?
-                null
-                : <Text
-                  allowFontScaling={false}
-                  style={[{ width: 70, textAlign: 'right' }, handlerTextStyle]}>
-                  {this.formatTimeCounter(trimmerRightHandlePosition)}
-                </Text>}
-            </View>
           </View>
+
+          {hideHandlerText ? null :
+            <Text
+              onLayout={e => {
+                this.setState({ rightTextWidth: e.nativeEvent.layout.width });
+              }}
+              allowFontScaling={false}
+              style={[{
+                position: 'absolute',
+                left: actualTrimmerOffset + actualTrimmerWidth - (rightTextWidth || 0) - 6,
+                zIndex: 1,
+                alignSelf: 'center'
+              }, handlerTextStyle]}>
+              {this.formatTimeCounter(trimmerRightHandlePosition)}
+            </Text>}
         </ScrollView>
       </View >
     );
@@ -571,7 +577,8 @@ const styles = StyleSheet.create({
     left: TRACK_PADDING_OFFSET,
     top: 17,
     borderColor: TINT_COLOR,
-    borderWidth: 3,
+    borderTopWidth: 3,
+    borderBottomWidth: 3,
     height: 106,
   },
   handle: {
@@ -590,7 +597,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 10,
   },
   selection: {
-    opacity: 0.2,
+    opacity: 0.17,
     backgroundColor: TINT_COLOR,
     width: '100%',
     height: '100%',
@@ -615,7 +622,7 @@ const styles = StyleSheet.create({
     opacity: 0
   },
   scrubberContainer: {
-    zIndex: 1,
+    zIndex: 3,
     position: 'absolute',
     width: 14,
     height: "100%",
