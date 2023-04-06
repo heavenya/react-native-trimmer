@@ -379,7 +379,8 @@ export default class Trimmer extends React.Component {
       handlerTextStyle,
       scrubberTextStyle,
       hideHandlerText,
-      hideScrubberText
+      hideScrubberText,
+      invertFocus
     } = this.props;
 
     // if(maxTrimDuration < trimmerRightHandlePosition - trimmerLeftHandlePosition) {
@@ -471,10 +472,26 @@ export default class Trimmer extends React.Component {
               }
             </View>
             {clipsComponent ?
-              <View
-                style={{ width: '100%', height: '100%', position: 'absolute' }}>
+              <View style={{ width: '100%', height: '100%', position: 'absolute' }}>
                 {clipsComponent}
               </View> : null}
+            {invertFocus ?
+              <View style={{
+                position: 'absolute',
+                width: actualTrimmerOffset + this.trimScaler.handleWidth - 43,
+                backgroundColor: tintColor,
+                opacity: 0.17,
+                height: '100%'
+              }} /> : null}
+            {invertFocus ?
+              <View style={{
+                position: 'absolute',
+                width: '100%',
+                left: actualTrimmerOffset + actualTrimmerWidth - 19,
+                backgroundColor: tintColor,
+                opacity: 0.17,
+                height: '100%'
+              }} /> : null}
           </View>
           {
             typeof scrubberPosition === 'number'
@@ -488,7 +505,8 @@ export default class Trimmer extends React.Component {
                   <View style={[styles.scrubberHead, { backgroundColor: scrubberColor }]}>
                     {hideScrubberText ?
                       null
-                      : <Text
+                      :
+                      <Text
                         allowFontScaling={false}
                         style={[{ color: 'white', position: 'absolute', width: 70, left: 17, fontSize: 12 }, scrubberTextStyle]}>
                         {this.formatTimeCounter(scrubPosition)}
@@ -523,7 +541,7 @@ export default class Trimmer extends React.Component {
             { width: actualTrimmerWidth, left: actualTrimmerOffset },
             { borderColor: tintColor, height: this.trimScaler.handleHeight }
           ]}>
-            <View style={[styles.selection, { backgroundColor: tintColor }]} />
+            <View style={[styles.selection, invertFocus ? { backgroundColor: 'transparent', opacity: 1 } : { backgroundColor: tintColor }]} />
           </View>
           <View {...this.rightHandlePanResponder.panHandlers} style={[
             styles.handle,
